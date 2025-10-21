@@ -32,7 +32,9 @@ abstract class Closable {
 // ignore: one_member_abstracts
 abstract class Emittable<State extends Object?> {
   /// Emits a new [state].
-  void emit(State state);
+  /// If [force] is set to `true`, the [state] will be emitted even if it is
+  /// equal to the current [state].
+  void emit(State state, {bool force = false});
 }
 
 /// A generic destination for errors.
@@ -90,16 +92,19 @@ abstract class BlocBase<State>
   /// emitting a state which is equal to the initial state is allowed as long
   /// as it is the first thing emitted by the instance.
   ///
+  /// If [force] is set to `true`, the [state] will be emitted even if it is
+  /// equal to the current [state].
+  ///
   /// * Throws a [StateError] if the bloc is closed.
   @protected
   @visibleForTesting
   @override
-  void emit(State state) {
+  void emit(State state, {bool force = false}) {
     try {
       if (isClosed) {
         throw StateError('Cannot emit new states after calling close');
       }
-      if (state == _state && _emitted) return;
+      if (!force && state == _state && _emitted) return;
       onChange(Change<State>(currentState: this.state, nextState: state));
       _state = state;
       _stateController.add(_state);
